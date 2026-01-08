@@ -36,4 +36,262 @@
     .grid2 { display:grid; grid-template-columns: 1fr; gap: 14px; }
     @media (min-width: 860px) { .grid2 { grid-template-columns: 1fr 1fr; } }
     .small { font-size: 12px; opacity:.85; }
-   
+    .link { color:#8ab4ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>The Pita House — Advances Tracker</h1>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Date</label>
+            <input id="date" type="date" />
+          </div>
+          <div>
+            <label>Person</label>
+            <input id="person" placeholder="e.g. Fouad / Ali / Staff name" />
+          </div>
+          <div>
+            <label>Amount (USD)</label>
+            <input id="amount" type="number" step="0.01" placeholder="e.g. 50" />
+          </div>
+          <div>
+            <label>Type</label>
+            <select id="type">
+              <option value="Advance">Advance</option>
+              <option value="Repayment">Repayment</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Note (optional)</label>
+        <textarea id="note" placeholder="Reason / details..."></textarea>
+
+        <div class="actions" style="margin-top:12px;">
+          <button class="primary" id="addBtn">Add entry</button>
+          <button id="exportBtn">Export CSV</button>
+          <button class="danger" id="clearBtn">Clear all</button>
+        </div>
+        <div class="muted" style="margin-top:10px;">
+          Data is saved locally in your browser (localStorage).
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="small">Net balance (Advances - Repayments)</div>
+            <div class="total" id="net">$0.00</div>
+          </div>
+          <div>
+            <div class="small">Total advances</div>
+            <div class="total" id="adv">$0.00</div>
+          </div>
+          <div>
+            <div class="small">Total repayments</div>
+            <div class="total" id="rep">$0.00</div>
+          </div>
+        </div>
+
+        <label style="margin-top:14px;">Search</label>
+        <input id="search" placeholder="Search by person / note / type..." />
+        <div class="muted" style="margin-top:8px;">
+          Tip: put this on GitHub Pages later to open it anywhere.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="align-items:center;">
+        <div><span class="pill" id="countPill">0 entries</span></div>
+        <div class="right muted">Newest first</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:110px;">Date</th>
+            <th style="width:160px;">Person</th>
+            <th style="width:120px;">Type</th>
+            <th class="right" style="width:140px;">Amount</th>
+            <th>Note</th>
+            <th style="width:90px;"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="muted" style="margin-top:10px;">
+        Made as a simple static page. No backend. No accounts. Just your device.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const KEY = "pita-advances-v1";
+
+    function todayISO() {
+      const d = new Date();
+      const off = d.getTimezoneOffset();
+      const local = new Date(d.getTime() - off * 60000);
+      return local.toISOString().slice(0,10);
+    }
+
+    function load() {
+      try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+      catch { return []; }
+    }
+    function save(items) {
+      localStorage.setItem(KEY, JSON.stringify(items));
+    }
+
+    function fmtMoney(n) {
+      const v = Number(n || 0);
+      return v.toLocaleString(undefined, { style:"currency", currency:"USD" });
+    }
+
+    function calc(items) {
+      let adv = 0, rep = 0;
+      for (const it of items) {
+        const amt = Number(it.amount || 0);
+        if (it.type === "Repayment") rep += amt;
+        else adv += amt;
+      }
+      return { adv, rep, net: adv - rep };
+    }
+
+    function matches(it, q) {
+      q = q.trim().toLowerCase();
+      if (!q) return true;
+      return (
+        (it.date || "").toLowerCase().includes(q) ||
+        (it.person || "").toLowerCase().includes(q) ||
+        (it.type || "").toLowerCase().includes(q) ||
+        (it.note || "").toLowerCase().includes(q)
+      );
+    }
+
+    function render() {
+      const items = load();
+      const q = $("search").value || "";
+      const filtered = items.filter(it => matches(it, q));
+
+      const { adv, rep, net } = calc(items);
+      $("adv").textContent = fmtMoney(adv);
+      $("rep").textContent = fmtMoney(rep);
+      $("net").textContent = fmtMoney(net);
+
+      $("countPill").textContent = `${filtered.length} entries`;
+
+      const tbody = $("tbody");
+      tbody.innerHTML = "";
+
+      for (const it of filtered) {
+        const tr = document.createElement("tr");
+
+        const tdDate = document.createElement("td");
+        tdDate.textContent = it.date || "";
+        tr.appendChild(tdDate);
+
+        const tdPerson = document.createElement("td");
+        tdPerson.textContent = it.person || "";
+        tr.appendChild(tdPerson);
+
+        const tdType = document.createElement("td");
+        tdType.textContent = it.type || "Advance";
+        tr.appendChild(tdType);
+
+        const tdAmt = document.createElement("td");
+        tdAmt.className = "right";
+        tdAmt.textContent = fmtMoney(it.amount || 0);
+        tr.appendChild(tdAmt);
+
+        const tdNote = document.createElement("td");
+        tdNote.textContent = it.note || "";
+        tr.appendChild(tdNote);
+
+        const tdDel = document.createElement("td");
+        tdDel.className = "right";
+        const btn = document.createElement("button");
+        btn.textContent = "Delete";
+        btn.className = "danger";
+        btn.onclick = () => {
+          const all = load().filter(x => x.id !== it.id);
+          save(all);
+          render();
+        };
+        tdDel.appendChild(btn);
+        tr.appendChild(tdDel);
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    function addEntry() {
+      const date = $("date").value || todayISO();
+      const person = $("person").value.trim();
+      const amount = $("amount").value;
+      const type = $("type").value;
+      const note = $("note").value.trim();
+
+      if (!person) { alert("Person is required"); return; }
+      if (!amount || Number(amount) <= 0) { alert("Amount must be > 0"); return; }
+
+      const items = load();
+      items.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+        date, person, amount: Number(amount), type, note
+      });
+      save(items);
+
+      $("person").value = "";
+      $("amount").value = "";
+      $("note").value = "";
+      $("type").value = "Advance";
+      $("date").value = todayISO();
+      render();
+    }
+
+    function exportCSV() {
+      const items = load();
+      const rows = [
+        ["date","person","type","amount","note"],
+        ...items.map(it => [
+          it.date || "",
+          (it.person || "").replaceAll('"','""'),
+          it.type || "Advance",
+          String(it.amount || 0),
+          (it.note || "").replaceAll('"','""')
+        ])
+      ];
+      const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+      const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "pita-advances.csv";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearAll() {
+      if (!confirm("Delete ALL entries?")) return;
+      localStorage.removeItem(KEY);
+      render();
+    }
+
+    $("addBtn").addEventListener("click", addEntry);
+    $("exportBtn").addEventListener("click", exportCSV);
+    $("clearBtn").addEventListener("click", clearAll);
+    $("search").addEventListener("input", render);
+
+    $("date").value = todayISO();
+    render();
+  </script>
+</body>
+</html>
