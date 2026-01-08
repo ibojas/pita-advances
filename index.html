@@ -2,11 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The Pita House – Advances</title>
-</head>
-<body>
-  <h1>The Pita House</h1>
-  <p>Advances tracker</p>
-</body>
-</html>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Pita House — Advances</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial; background:#0b0f14; color:#e6edf3; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+    h1 { margin: 6px 0 14px; font-size: 22px; }
+    .card { background:#0f1620; border:1px solid #233041; border-radius: 14px; padding: 14px; margin-bottom: 14px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .row > * { flex:1 1 180px; }
+    label { display:block; font-size: 12px; opacity:.85; margin: 8px 0 6px; }
+    input, select, button, textarea {
+      width:100%; box-sizing:border-box;
+      padding: 10px 12px; border-radius: 12px;
+      border: 1px solid #233041; background:#0b111a; color:#e6edf3;
+      font-size: 14px;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    button { cursor:pointer; border: 1px solid #2b3c52; background:#122033; }
+    button.primary { background:#1f6feb; border-color:#1f6feb; }
+    button.danger { background:#2a0f13; border-color:#6e2430; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .muted { opacity:.75; font-size: 12px; }
+    table { width:100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align:left; padding: 10px 8px; border-bottom: 1px solid #233041; font-size: 13px; vertical-align: top; }
+    th { font-size:12px; opacity:.85; }
+    .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; border:1px solid #233041; background:#0b111a; }
+    .right { text-align:right; }
+    .actions { display:flex; gap:10px; flex-wrap: wrap; }
+    .actions button { flex: 0 0 auto; width:auto; }
+    .total { font-size: 18px; font-weight: 700; }
+    .grid2 { display:grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 860px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+    .small { font-size: 12px; opacity:.85; }
+   
